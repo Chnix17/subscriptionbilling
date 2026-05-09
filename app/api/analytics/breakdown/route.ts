@@ -7,11 +7,19 @@ export async function GET() {
   try {
     const session = await requireAuth()
 
-    // Get subscriptions grouped by type
-    const { data: subscriptions } = await supabase
-      .from('tblsubscriptionname')
-      .select('subscription_type, subscription_bill')
-      .eq('subscription_added_by', session.userId)
+    // Get billing logs with subscription types for accurate breakdown
+    const { data: billingLogs } = await supabase
+      .from('tblsubscriptionlog')
+      .select(`
+        subscription_total_bill,
+        subscription_renew:subscription_renew_id (
+          subscription_id,
+          subscription:subscription_id (
+            subscription_type
+          )
+        )
+      `)
+      .eq('subscription_action_by', session.userId)
 
     const breakdown = {
       monthly: { count: 0, total: 0 },
@@ -19,11 +27,26 @@ export async function GET() {
       annually: { count: 0, total: 0 },
     }
 
-    subscriptions?.forEach((sub) => {
-      const type = sub.subscription_type.toLowerCase() as keyof typeof breakdown
+    // Track unique subscriptions to avoid counting renewals multiple times for count
+    const uniqueSubscriptions = new Set<string>()
+
+    billingLogs?.forEach((log) => {
+      const subscriptionData = log.subscription_renew?.[0]
+      if (!subscriptionData) return
+
+      const subscriptionType = subscriptionData.subscription?.[0]?.subscription_type
+      if (!subscriptionType) return
+
+      const type = subscriptionType.toLowerCase() as keyof typeof breakdown
       if (breakdown[type]) {
-        breakdown[type].count += 1
-        breakdown[type].total += Number(sub.subscription_bill)
+        breakdown[type].total += Number(log.subscription_total_bill)
+        
+        // Create unique key for subscription using subscription_id
+        const subscriptionKey = `${subscriptionData.subscription_id}_${subscriptionType}`
+        if (!uniqueSubscriptions.has(subscriptionKey)) {
+          uniqueSubscriptions.add(subscriptionKey)
+          breakdown[type].count += 1
+        }
       }
     })
 

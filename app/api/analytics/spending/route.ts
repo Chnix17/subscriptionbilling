@@ -7,32 +7,39 @@ export async function GET() {
   try {
     const session = await requireAuth()
 
-    // Get all subscriptions
-    const { data: subscriptions } = await supabase
-      .from('tblsubscriptionname')
-      .select('subscription_bill, subscription_type, created_at')
-      .eq('subscription_added_by', session.userId)
+    // Get all billing logs from subscription log table
+    const { data: billingLogs } = await supabase
+      .from('tblsubscriptionlog')
+      .select(`
+        subscription_total_bill,
+        subscription_created_at,
+        subscription_renew:subscription_renew_id (
+          subscription_id,
+          subscription:subscription_id (
+            subscription_name,
+            subscription_type
+          )
+        )
+      `)
+      .eq('subscription_action_by', session.userId)
 
-    // Calculate monthly spending for the last 6 months
+    // Calculate monthly spending for the last 6 months based on actual billing transactions
     const monthlyData: { month: string; amount: number }[] = []
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
     for (let i = 5; i >= 0; i--) {
       const date = new Date()
       date.setMonth(date.getMonth() - i)
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      const monthStart = new Date(date.getFullYear(), date.getMonth(), 1)
+      const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0)
       const monthLabel = monthNames[date.getMonth()]
 
       let monthTotal = 0
-      subscriptions?.forEach((sub) => {
-        // For simplicity, assume all subscriptions were active in all months
-        // In a real app, you'd check subscription creation date and renewal history
-        if (sub.subscription_type === 'MONTHLY') {
-          monthTotal += Number(sub.subscription_bill)
-        } else if (sub.subscription_type === 'ANNUALLY') {
-          monthTotal += Number(sub.subscription_bill) / 12
-        } else if (sub.subscription_type === 'WEEKLY') {
-          monthTotal += Number(sub.subscription_bill) * 4.33
+      billingLogs?.forEach((log) => {
+        const logDate = new Date(log.subscription_created_at)
+        // Only include billing transactions that occurred in this month
+        if (logDate >= monthStart && logDate <= monthEnd) {
+          monthTotal += Number(log.subscription_total_bill)
         }
       })
 
