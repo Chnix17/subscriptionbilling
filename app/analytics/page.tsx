@@ -95,51 +95,7 @@ export default function AnalyticsPage() {
             <SubscriptionChart data={spendingData} />
 
             {/* Breakdown */}
-            {breakdown && (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">
-                  Subscription Breakdown
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-500" />
-                      <span className="font-medium text-slate-700 dark:text-slate-300">Monthly</span>
-                    </div>
-                    <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                      {breakdown.monthly.count}
-                    </p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {formatCurrency(breakdown.monthly.total)} total
-                    </p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500" />
-                      <span className="font-medium text-slate-700 dark:text-slate-300">Weekly</span>
-                    </div>
-                    <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                      {breakdown.weekly.count}
-                    </p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {formatCurrency(breakdown.weekly.total)} total
-                    </p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-3 rounded-full bg-purple-500" />
-                      <span className="font-medium text-slate-700 dark:text-slate-300">Annually</span>
-                    </div>
-                    <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                      {breakdown.annually.count}
-                    </p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {formatCurrency(breakdown.annually.total)} total
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+          
           </>
         )}
       </div>
